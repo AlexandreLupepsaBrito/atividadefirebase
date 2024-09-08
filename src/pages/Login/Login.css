@@ -1,0 +1,120 @@
+.formulario-login {
+  padding: 20px;
+  margin-bottom: 50px; /* Adicionando margem inferior */
+  background-color: #f9f9f9;
+  border-radius: 5px;
+}
+
+.editar-perfil-form {
+  margin-top: 20px; /* Garantindo que haja espaçamento entre o topo da página */
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 5px;
+}
+
+.img-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.img-container img {
+  width: 150px;
+}
+
+.foto-perfil {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 20px;
+}
+
+/* Ajuste nos botões de Logout e Editar Perfil */
+button {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px 20px;
+    margin: 10px 0; /* Espaçamento entre os botões */
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background-color: #28a745; /* Verde */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #218838; /* Verde mais escuro ao passar o mouse */
+  }
+  
+  /* Estilo específico para o botão de editar perfil */
+  .editar-perfil-button {
+    background-color: #007bff; /* Azul */
+  }
+  
+  .editar-perfil-button:hover {
+    background-color: #0056b3; /* Azul mais escuro ao passar o mouse */
+  }
+  
+  /* Centralização do container dos botões */
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Estilos para o modal de edição de perfil */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fundo transparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    width: 100%;
+    position: relative;
+  }
+  
+  .close-button {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 25px;
+    cursor: pointer;
+    color: red;
+  }
+  
+  button[type="submit"], .cancelar-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .cancelar-button {
+    background-color: #dc3545; /* Cor vermelha para cancelar */
+  }
+  
+  h2 {
+    text-align: center;
+  }
+  
+  
+  

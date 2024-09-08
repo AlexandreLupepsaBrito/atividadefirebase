@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { auth, db, storage } from '../../firebaseConnection';
+import './Login.css';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -17,12 +18,14 @@ function Login() {
   const [nome, setNome] = useState('');
   const [cpf, setCpf] = useState('');
   const [fotoPerfil, setFotoPerfil] = useState(null);
-
+  const [novoNome, setNovoNome] = useState('');
+  const [novoCpf, setNovoCpf] = useState('');
+  const [editarPerfil, setEditarPerfil] = useState(false);
   const [usuario, setUsuario] = useState(null);
   const [cadastroCompleto, setCadastroCompleto] = useState(false);
 
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const docRef = doc(db, 'usuarios', user.uid);
         const docSnap = await getDoc(docRef);
@@ -40,66 +43,86 @@ function Login() {
             });
           } else {
             setCadastroCompleto(false);
+            setUsuario({
+              uid: user.uid,
+              email: user.email,
+            });
           }
         } else {
           setCadastroCompleto(false);
+          setUsuario({
+            uid: user.uid,
+            email: user.email,
+          });
         }
       } else {
         setUsuario(null);
       }
     });
+
+    return () => unsubscribe();
   }, []);
 
   async function novoUsuario(e) {
     e.preventDefault();
-    await createUserWithEmailAndPassword(auth, email, senha)
-      .then(async (userCredential) => {
-        alert('Usuário cadastrado com sucesso!');
-        setEmail('');
-        setSenha('');
-      })
-      .catch((error) => {
-        if (error.code === 'auth/weak-password') {
-          alert('Senha muito fraca');
-        } else if (error.code === 'auth/email-already-in-use') {
-          alert('E-mail já existe');
-        }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      const user = userCredential.user;
+
+      setUsuario({
+        uid: user.uid,
+        email: user.email,
       });
+
+      setCadastroCompleto(false);
+
+      alert('Usuário cadastrado com sucesso! Por favor, complete o cadastro.');
+      setEmail('');
+      setSenha('');
+    } catch (error) {
+      if (error.code === 'auth/weak-password') {
+        alert('Senha muito fraca');
+      } else if (error.code === 'auth/email-already-in-use') {
+        alert('E-mail já existe');
+      } else {
+        alert('Erro ao criar usuário: ' + error.message);
+      }
+    }
   }
 
   async function logarUsuario(e) {
     e.preventDefault();
-    await signInWithEmailAndPassword(auth, email, senha)
-      .then(async (value) => {
-        alert('Usuário logado com sucesso');
-        const user = value.user;
+    try {
+      const value = await signInWithEmailAndPassword(auth, email, senha);
+      const user = value.user;
 
-        const docRef = doc(db, 'usuarios', user.uid);
-        const docSnap = await getDoc(docRef);
+      const docRef = doc(db, 'usuarios', user.uid);
+      const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          const dados = docSnap.data();
-          if (dados.nome && dados.cpf && dados.fotoPerfil) {
-            setCadastroCompleto(true);
-            setUsuario({
-              uid: user.uid,
-              email: user.email,
-              nome: dados.nome,
-              cpf: dados.cpf,
-              fotoPerfil: dados.fotoPerfil,
-            });
-          } else {
-            setCadastroCompleto(false);
-          }
+      if (docSnap.exists()) {
+        const dados = docSnap.data();
+        if (dados.nome && dados.cpf && dados.fotoPerfil) {
+          setCadastroCompleto(true);
+          setUsuario({
+            uid: user.uid,
+            email: user.email,
+            nome: dados.nome,
+            cpf: dados.cpf,
+            fotoPerfil: dados.fotoPerfil,
+          });
         } else {
           setCadastroCompleto(false);
         }
-        setEmail('');
-        setSenha('');
-      })
-      .catch(() => {
-        alert('Erro ao fazer login');
-      });
+      } else {
+        setCadastroCompleto(false);
+      }
+      setEmail('');
+      setSenha('');
+      alert('Usuário logado com sucesso');
+    } catch (error) {
+      alert('Erro ao fazer login: ' + error.message);
+    }
   }
 
   async function fazerLogout() {
@@ -153,6 +176,42 @@ function Login() {
     }
   }
 
+  async function atualizarPerfil(e) {
+    e.preventDefault();
+
+    try {
+      const user = auth.currentUser;
+      const docRef = doc(db, 'usuarios', user.uid);
+
+      const updates = {};
+      if (novoNome) updates.nome = novoNome;
+      if (novoCpf) updates.cpf = novoCpf;
+
+      if (fotoPerfil) {
+        const fotoRef = ref(storage, `fotosPerfil/${user.uid}`);
+        await uploadBytes(fotoRef, fotoPerfil);
+        updates.fotoPerfil = await getDownloadURL(fotoRef);
+      }
+
+      await setDoc(docRef, updates, { merge: true });
+
+      if (novoNome) {
+        await updateProfile(user, {
+          displayName: novoNome,
+        });
+      }
+
+      alert('Perfil atualizado com sucesso!');
+      setUsuario((prev) => ({
+        ...prev,
+        ...updates,
+      }));
+      setEditarPerfil(false);
+    } catch (error) {
+      alert('Erro ao atualizar perfil: ' + error.message);
+    }
+  }
+
   return (
     <div className="container-carrinho">
       <div className="formulario-login">
@@ -195,6 +254,7 @@ function Login() {
                 <p>CPF: {usuario.cpf}</p>
                 <img src={usuario.fotoPerfil} alt="Foto de Perfil" className="foto-perfil" />
                 <button onClick={fazerLogout}>Logout</button>
+                <button onClick={() => setEditarPerfil(true)}>Editar Perfil</button>
               </div>
             ) : (
               <form onSubmit={completarCadastro}>
@@ -231,10 +291,43 @@ function Login() {
               </form>
             )}
 
-            <div className="links">
-              <Link to="/">Esqueceu a senha?</Link>
-              <Link to="/">Criar uma conta</Link>
-            </div>
+            {editarPerfil && (
+              <div className="modal">
+                <div className="modal-content">
+                  <span className="close-button" onClick={() => setEditarPerfil(false)}>&times;</span>
+                  <h2>Editar Perfil</h2>
+
+                  <form onSubmit={atualizarPerfil}>
+                    <label htmlFor="novoNome">
+                      <b>Nome</b>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Digite seu novo nome"
+                      value={novoNome}
+                      onChange={(e) => setNovoNome(e.target.value)}
+                    />
+
+                    <label htmlFor="novoCpf">
+                      <b>CPF</b>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Digite seu novo CPF"
+                      value={novoCpf}
+                      onChange={(e) => setNovoCpf(e.target.value)}
+                    />
+
+                    <label htmlFor="fotoPerfil">
+                      <b>Foto de Perfil</b>
+                    </label>
+                    <input type="file" onChange={handleFotoPerfilChange} />
+
+                    <button type="submit">Salvar Alterações</button>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

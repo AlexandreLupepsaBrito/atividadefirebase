@@ -331,13 +331,7 @@ main {
 
   /* Adicione isso ao seu arquivo CSS */
 
-.foto-perfil {
-    width: 100px; /* Ajuste o tamanho conforme necessário */
-    height: 100px;
-    border-radius: 50%; /* Faz a imagem ser redonda */
-    object-fit: cover; /* Garante que a imagem se ajuste bem ao tamanho */
-    margin-top: 10px; /* Adiciona um espaço acima da imagem */
-  }
+
   
 .formulario-login {  
     width: 350px;
@@ -424,6 +418,8 @@ top: 110px;
 position: relative;
 top: 30px;
 }
+
+
 
 
 /* media query */
